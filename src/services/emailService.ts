@@ -22,7 +22,7 @@ class EmailService {
 
     constructor() {
         this.resend = new Resend(config.resendApiKey);
-        this.defaultSender = "onboarding@resend.dev"; // Emisor por defecto de Resend o puedes cambiarlo
+        this.defaultSender = "notificaciones@no-reply.neurox.cl"; // Emisor por defecto de Resend o puedes cambiarlo
     }
 
     /**
