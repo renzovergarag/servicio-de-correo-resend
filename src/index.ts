@@ -21,7 +21,7 @@ app.use("/api/email", emailRoutes);
 app.get("/", (req, res) => {
     res.json({
         status: "OK",
-        message: "Servicio de correo electrónico funcionando correctamente",
+        message: "Servicio de correo electrónico funcionando correctamente con Resend",
     });
 });
 
