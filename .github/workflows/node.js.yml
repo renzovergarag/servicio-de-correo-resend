@@ -17,5 +17,12 @@ jobs:
               with:
                   node-version: 18.x
                   cache: "npm"
-            - run: npm install
-            - run: npm run build --if-present
+            - name: Create custom .env file
+              run: |
+                  cat > .env <<EOF
+                    RESEND_API_KEY=${{ secrets.API_KEY_RESEND }}
+                    PORT=3000
+            - name: instalacion de dependencias
+              run: npm install
+            - name: Build
+              run: npm run build --if-present
