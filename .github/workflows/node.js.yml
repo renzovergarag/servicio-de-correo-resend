@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Node.js CI/CD
 
 on:
     push:
@@ -20,8 +20,9 @@ jobs:
             - name: Create custom .env file
               run: |
                   cat > .env <<EOF
-                    RESEND_API_KEY=${{ secrets.API_KEY_RESEND }}
-                    PORT=3000
+                  RESEND_API_KEY=${{ secrets.API_KEY_RESEND }}
+                  PORT=3000
+                  EOF
             - name: instalacion de dependencias
               run: npm install
             - name: Build
