@@ -36,30 +36,3 @@ export const sendEmail = async (req: Request, res: Response) => {
         });
     }
 };
-
-export const sendTemplateEmail = async (req: Request, res: Response) => {
-    try {
-        const { to, subject, templateId, data } = req.body;
-
-        if (!to || !subject || !templateId || !data) {
-            return res.status(400).json({
-                success: false,
-                message: "Se requieren los campos: to, subject, templateId y data",
-            });
-        }
-
-        const result = await emailService.sendTemplateEmail(to, subject, templateId, data);
-
-        if (!result.success) {
-            return res.status(500).json(result);
-        }
-
-        return res.status(200).json(result);
-    } catch (error) {
-        console.error("Error en el controlador de envío con plantilla:", error);
-        return res.status(500).json({
-            success: false,
-            message: error instanceof Error ? error.message : "Error desconocido",
-        });
-    }
-};

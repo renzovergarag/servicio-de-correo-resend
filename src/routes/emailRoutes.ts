@@ -1,12 +1,20 @@
-import { Router } from "express";
+import express from "express";
 import * as emailController from "../controllers/emailController";
 
-const router = Router();
+// Crear un router
+const router = express.Router();
 
-// Ruta para enviar correo electrónico básico
-router.post("/send", emailController.sendEmail);
-
-// Ruta para enviar correo usando plantillas de Resend
-router.post("/send-template", emailController.sendTemplateEmail);
+// Definir las rutas y encapsular los controladores
+router.post("/send", async (req, res) => {
+    try {
+        await emailController.sendEmail(req, res);
+    } catch (error) {
+        console.error("Error en ruta /send:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+        });
+    }
+});
 
 export default router;
