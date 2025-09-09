@@ -20,7 +20,7 @@ jobs:
             - name: Create custom .env file
               run: |
                   cat > .env <<EOF
-                  RESEND_API_KEY=tu_api_key_de_resend
+                  RESEND_API_KEY=${{ secrets.API_KEY_RESEND }}
                   PORT=3000
                   EOF
             - name: instalacion de dependencias
