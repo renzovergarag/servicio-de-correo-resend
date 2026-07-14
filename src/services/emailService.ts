@@ -12,7 +12,7 @@ interface EmailOptions {
     replyTo?: string;
     attachments?: {
         filename: string;
-        content: Buffer;
+        content: Buffer | string;
     }[];
 }
 

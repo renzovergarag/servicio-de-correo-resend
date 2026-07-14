@@ -3,7 +3,7 @@ import emailService from "../services/emailService";
 
 export const sendEmail = async (req: Request, res: Response) => {
     try {
-        const { from, to, subject, html, text, cc, bcc, replyTo } = req.body;
+        const { from, to, subject, html, text, cc, bcc, replyTo, attachments } = req.body;
 
         if (!to || !subject || (!html && !text)) {
             return res.status(400).json({
@@ -21,6 +21,7 @@ export const sendEmail = async (req: Request, res: Response) => {
             cc,
             bcc,
             replyTo,
+            attachments,
         });
 
         if (!result.success) {
