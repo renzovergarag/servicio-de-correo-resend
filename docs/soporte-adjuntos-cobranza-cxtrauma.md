@@ -69,10 +69,34 @@ Resend acepta `content` como **string base64**. cx-trauma enviará cada adjunto 
 > `Buffer` como string base64 en `content`, por lo que reenviar el string tal cual funciona.
 > Si se prefiere tipado estricto, ampliar el tipo a `Buffer | string` en `emailService.ts`.
 
+## Cambio requerido #2 (body parser) — BLOQUEANTE
+
+`src/index.ts` monta el parser JSON sin límite explícito:
+
+```ts
+app.use(express.json());
+```
+
+El default de Express/body-parser es **100 kb**. El correo de cobranza envía varios PDFs en
+base64 en un solo request, superando fácilmente ese límite → el microservicio responde
+**HTTP 413 `PayloadTooLargeError: request entity too large`** y el correo NO se envía.
+
+**Cambio requerido:** subir el límite del body JSON:
+
+```diff
+- app.use(express.json());
++ app.use(express.json({ limit: '25mb' }));
+```
+
+25 MB deja holgura de sobra (Resend acepta hasta ~40 MB por correo, y base64 infla el tamaño
+~33 %). Recompilar/reiniciar el servicio tras el cambio (`npm run build && pm2 restart ...` o
+el mecanismo que use el deploy).
+
 ## Consideraciones
 
 - **Límite de tamaño**: Resend permite hasta ~40 MB por correo. Los PDFs de cobranza son
-  livianos; sin riesgo con el volumen actual de centros.
+  livianos; sin riesgo con el volumen actual de centros, pero el body parser de Express debe
+  aceptar el tamaño total (ver cambio #2).
 - **Validación opcional**: se puede validar que `attachments`, si viene, sea un array de
   objetos `{ filename, content }`. No es bloqueante para cx-trauma.
 
