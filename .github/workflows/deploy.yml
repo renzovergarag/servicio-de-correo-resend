@@ -1,0 +1,66 @@
+name: Deploy
+
+# Despliegue a producción. Se dispara SOLO en push a main.
+# No debe agregarse un trigger `pull_request` a este workflow: correría
+# código de terceros en el runner self-hosted.
+on:
+    push:
+        branches: ["main"]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+# Evita que dos despliegues se pisen entre sí.
+concurrency:
+    group: deploy-production
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        name: Desplegar
+        runs-on: self-hosted
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Generar archivo .env
+              env:
+                  ENV_PROD: ${{ secrets.ENV_PROD }}
+              run: |
+                  if [ -z "$ENV_PROD" ]; then
+                    echo "::error::El secret ENV_PROD está vacío o no existe."
+                    exit 1
+                  fi
+                  printf '%s\n' "$ENV_PROD" > .env
+                  chmod 600 .env
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Compilar TypeScript
+              run: npm run build
+
+            - name: Recargar servicio en pm2
+              run: |
+                  if pm2 describe servicio-de-correo > /dev/null 2>&1; then
+                    pm2 reload servicio-de-correo --update-env
+                  else
+                    pm2 start src/index.js --name servicio-de-correo
+                  fi
+                  pm2 save
+
+            - name: Verificar que el servicio responde
+              run: |
+                  PORT=$(grep -E '^PORT=' .env | cut -d= -f2- | tr -d '"' || echo 3000)
+                  PORT=${PORT:-3000}
+                  for i in $(seq 1 10); do
+                    if curl -fsS "http://localhost:${PORT}/" > /dev/null; then
+                      echo "Servicio respondiendo en el puerto ${PORT}"
+                      exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "::error::El servicio no respondió en el puerto ${PORT} tras el despliegue."
+                  pm2 logs servicio-de-correo --lines 30 --nostream || true
+                  exit 1

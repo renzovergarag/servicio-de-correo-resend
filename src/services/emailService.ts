@@ -19,10 +19,12 @@ interface EmailOptions {
 class EmailService {
     private resend: Resend;
     private defaultSender: string;
+    private defaultReplyTo: string;
 
     constructor() {
         this.resend = new Resend(config.resendApiKey);
-        this.defaultSender = "notificaciones@no-reply.neurox.cl"; // Emisor por defecto de Resend o puedes cambiarlo
+        this.defaultSender = config.defaultFrom;
+        this.defaultReplyTo = config.defaultReplyTo;
     }
 
     /**
@@ -32,7 +34,17 @@ class EmailService {
      */
     async sendEmail(options: EmailOptions) {
         try {
-            const { from = this.defaultSender, to, subject, html, text, cc, bcc, replyTo, attachments } = options;
+            const {
+                from = this.defaultSender,
+                to,
+                subject,
+                html,
+                text,
+                cc,
+                bcc,
+                replyTo = this.defaultReplyTo || undefined,
+                attachments,
+            } = options;
 
             const emailOptions: any = {
                 from,
@@ -51,6 +63,17 @@ class EmailService {
             }
 
             const result = await this.resend.emails.send(emailOptions);
+
+            // El SDK de Resend no lanza excepciones ante errores de la API:
+            // devuelve { data, error }. Sin este chequeo, un dominio no verificado
+            // o un destinatario inválido se reportarían como envío exitoso.
+            if (result.error) {
+                console.error("Resend rechazó el envío:", result.error);
+                return {
+                    success: false,
+                    error: result.error.message || "Resend rechazó el envío",
+                };
+            }
 
             return {
                 success: true,
